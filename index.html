@@ -14,18 +14,18 @@
       --text: #333333;
       --border: #bdc3c7;
       --shadow: 0 4px 12px rgba(0,0,0,0.1);
+      --error: #e74c3c;
+      --success: #27ae60;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; display: flex; min-height: 100vh; }
     
-    /* Sidebar */
     #sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px 0; position: fixed; height: 100%; transition: transform 0.3s ease; z-index: 100; }
     #sidebar h2 { text-align: center; margin-bottom: 25px; font-size: 1.1rem; padding: 0 10px; border-bottom: 1px solid var(--secondary); padding-bottom: 15px; }
     .nav-link { padding: 14px 20px; color: #bdc3c7; text-decoration: none; transition: 0.2s; border-left: 4px solid transparent; font-weight: 500; }
     .nav-link:hover, .nav-link.active { background: var(--secondary); color: #fff; border-left-color: var(--accent); }
     #menu-toggle { display: none; position: fixed; top: 15px; left: 15px; z-index: 101; background: var(--primary); color: white; border: none; padding: 10px 14px; cursor: pointer; border-radius: 6px; font-size: 1rem; box-shadow: var(--shadow); }
     
-    /* Main Content */
     main { margin-left: 260px; flex: 1; padding: 30px; width: calc(100% - 260px); }
     .page { display: none; max-width: 950px; margin: 0 auto; animation: fadeIn 0.3s ease; }
     .page.active { display: block; }
@@ -43,7 +43,6 @@
     .info-item strong { display: block; color: var(--secondary); margin-bottom: 4px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
     .info-item span { display: block; font-size: 1.05rem; }
     
-    /* Form */
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--primary); }
     .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; transition: border 0.2s; }
@@ -51,11 +50,21 @@
     .form-group textarea { min-height: 100px; resize: vertical; }
     button[type="submit"] { background: var(--accent); color: white; border: none; padding: 14px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; width: 100%; }
     button[type="submit"]:hover { background: #2980b9; }
-    .success-msg { color: #27ae60; margin-top: 12px; font-weight: 500; display: none; text-align: center; }
-    .upload-status { font-size: 0.85rem; margin-top: 5px; min-height: 1.2em; }
+    button[type="submit"]:disabled { background: #95a5a6; cursor: not-allowed; }
+    
+    .alert { padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; display: none; }
+    .alert-error { background: #fdf2f2; border: 1px solid var(--error); color: var(--error); }
+    .alert-success { background: #f0fff4; border: 1px solid var(--success); color: var(--success); }
+    .alert.show { display: block; }
+    
+    .upload-status { font-size: 0.85rem; margin-top: 8px; padding: 8px; border-radius: 4px; background: #f8f9fa; min-height: 1.2em; }
+    .upload-status.loading { color: #3498db; }
+    .upload-status.success { color: var(--success); background: #f0fff4; }
+    .upload-status.error { color: var(--error); background: #fdf2f2; }
+    
+    .debug-info { background: #f8f9fa; padding: 10px; border-radius: 4px; font-size: 0.8rem; margin-top: 10px; border-left: 3px solid var(--accent); }
     small { color: #7f8c8d; display: block; margin-top: 5px; }
 
-    /* Responsive */
     @media (max-width: 768px) {
       #sidebar { transform: translateX(-100%); width: 240px; }
       #sidebar.open { transform: translateX(0); }
@@ -76,7 +85,6 @@
   </nav>
 
   <main>
-    <!-- Страница 1: О себе -->
     <section id="about" class="page active">
       <div class="card">
         <h1>Информация о студенте</h1>
@@ -100,7 +108,6 @@
       </div>
     </section>
 
-    <!-- Страница 2: Организация -->
     <section id="org" class="page">
       <div class="card">
         <h1>Информация об организации</h1>
@@ -113,17 +120,21 @@
       </div>
     </section>
 
-    <!-- Страница 3: Редактирование -->
     <section id="edit" class="page">
       <div class="card">
         <h1>Редактирование данных</h1>
+        
+        <div id="alert-error" class="alert alert-error"></div>
+        <div id="alert-success" class="alert alert-success"></div>
+        
         <form id="edit-form">
           <div class="form-group">
             <label>Фотография:</label>
             <input type="file" id="edit-photo" accept="image/*">
-            <p class="upload-status" id="upload-status"></p>
-            <small>Автоматически сжимается для сохранения в браузере.</small>
+            <div id="upload-status" class="upload-status"></div>
+            <small>💡 Совет: загрузите файл Ivanov.jpg в репозиторий GitHub для надёжности</small>
           </div>
+          
           <div class="info-grid">
             <div class="form-group"><label>ФИО:</label><input type="text" id="edit-name" required></div>
             <div class="form-group"><label>ВУЗ:</label><input type="text" id="edit-uni" required></div>
@@ -132,14 +143,21 @@
             <div class="form-group"><label>Направление:</label><input type="text" id="edit-major" required></div>
             <div class="form-group"><label>Должность:</label><input type="text" id="edit-pos"></div>
           </div>
+          
           <div class="form-group"><label>Образовательные интересы:</label><textarea id="edit-edu"></textarea></div>
           <div class="form-group"><label>Профессиональные интересы:</label><textarea id="edit-prof"></textarea></div>
           <div class="form-group"><label>Достижения:</label><textarea id="edit-achieve"></textarea></div>
           <div class="form-group"><label>Название организации:</label><input type="text" id="edit-org-name"></div>
           <div class="form-group"><label>Описание организации:</label><textarea id="edit-org-desc"></textarea></div>
-          <button type="submit">💾 Сохранить изменения</button>
-          <p class="success-msg" id="success-msg">✅ Данные успешно сохранены!</p>
+          
+          <button type="submit" id="save-btn">💾 Сохранить изменения</button>
         </form>
+        
+        <div class="debug-info">
+          <strong>📊 Информация о хранилище:</strong><br>
+          Использовано: <span id="storage-used">0</span> КБ из ~5000 КБ<br>
+          Свободно: <span id="storage-free">0</span> КБ
+        </div>
       </div>
     </section>
   </main>
@@ -168,52 +186,85 @@
       const menuToggle = document.getElementById('menu-toggle');
       const sidebar = document.getElementById('sidebar');
       const form = document.getElementById('edit-form');
-      const successMsg = document.getElementById('success-msg');
+      const alertError = document.getElementById('alert-error');
+      const alertSuccess = document.getElementById('alert-success');
       const uploadStatus = document.getElementById('upload-status');
+      const saveBtn = document.getElementById('save-btn');
+
+      function showAlert(message, type = 'error') {
+        const alert = type === 'error' ? alertError : alertSuccess;
+        alert.textContent = message;
+        alert.classList.add('show');
+        setTimeout(() => alert.classList.remove('show'), 5000);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function updateStorageInfo() {
+        let total = 0;
+        for(let key in localStorage) {
+          if(localStorage.hasOwnProperty(key)) {
+            total += localStorage[key].length * 2;
+          }
+        }
+        const usedKB = Math.round(total / 1024);
+        const freeKB = Math.round((5000 - usedKB));
+        document.getElementById('storage-used').textContent = usedKB;
+        document.getElementById('storage-free').textContent = freeKB;
+      }
 
       function render() {
-        document.getElementById('disp-name').textContent = siteData.name;
-        document.getElementById('disp-uni').textContent = siteData.uni;
-        document.getElementById('disp-dept').textContent = siteData.dept;
-        document.getElementById('disp-group').textContent = siteData.group;
-        document.getElementById('disp-major').textContent = siteData.major;
-        document.getElementById('disp-edu').textContent = siteData.edu;
-        document.getElementById('disp-prof').textContent = siteData.prof;
-        document.getElementById('disp-achieve').textContent = siteData.achieve;
-        document.getElementById('disp-org-name').textContent = siteData.orgName;
-        document.getElementById('disp-org-desc').textContent = siteData.orgDesc;
-        document.getElementById('disp-pos').textContent = siteData.pos;
+        try {
+          document.getElementById('disp-name').textContent = siteData.name || '';
+          document.getElementById('disp-uni').textContent = siteData.uni || '';
+          document.getElementById('disp-dept').textContent = siteData.dept || '';
+          document.getElementById('disp-group').textContent = siteData.group || '';
+          document.getElementById('disp-major').textContent = siteData.major || '';
+          document.getElementById('disp-edu').textContent = siteData.edu || '';
+          document.getElementById('disp-prof').textContent = siteData.prof || '';
+          document.getElementById('disp-achieve').textContent = siteData.achieve || '';
+          document.getElementById('disp-org-name').textContent = siteData.orgName || '';
+          document.getElementById('disp-org-desc').textContent = siteData.orgDesc || '';
+          document.getElementById('disp-pos').textContent = siteData.pos || '';
 
-        const img = document.getElementById('display-photo');
-        const noPhoto = document.getElementById('no-photo-text');
-        
-        if (siteData.photo) {
-          img.src = siteData.photo;
-          img.style.display = 'block';
-          noPhoto.style.display = 'none';
-        } else {
-          // Фоллбэк на файл из репозитория
-          img.src = 'Ivanov.jpg';
-          img.style.display = 'block';
-          noPhoto.style.display = 'none';
-          img.onerror = () => {
-            img.style.display = 'none';
-            noPhoto.style.display = 'block';
-          };
+          const img = document.getElementById('display-photo');
+          const noPhoto = document.getElementById('no-photo-text');
+          
+          if (siteData.photo) {
+            console.log('Загрузка фото из localStorage, размер:', (siteData.photo.length / 1024).toFixed(1), 'KB');
+            img.src = siteData.photo;
+            img.style.display = 'block';
+            noPhoto.style.display = 'none';
+          } else {
+            img.src = 'Ivanov.jpg';
+            img.onload = () => {
+              console.log('Фото Ivanov.jpg загружено успешно');
+              img.style.display = 'block';
+              noPhoto.style.display = 'none';
+            };
+            img.onerror = () => {
+              console.warn('Фото Ivanov.jpg не найдено в репозитории');
+              img.style.display = 'none';
+              noPhoto.style.display = 'block';
+            };
+          }
+
+          document.getElementById('edit-name').value = siteData.name || '';
+          document.getElementById('edit-uni').value = siteData.uni || '';
+          document.getElementById('edit-dept').value = siteData.dept || '';
+          document.getElementById('edit-group').value = siteData.group || '';
+          document.getElementById('edit-major').value = siteData.major || '';
+          document.getElementById('edit-edu').value = siteData.edu || '';
+          document.getElementById('edit-prof').value = siteData.prof || '';
+          document.getElementById('edit-achieve').value = siteData.achieve || '';
+          document.getElementById('edit-org-name').value = siteData.orgName || '';
+          document.getElementById('edit-org-desc').value = siteData.orgDesc || '';
+          document.getElementById('edit-pos').value = siteData.pos || '';
+          
+          updateStorageInfo();
+        } catch (err) {
+          console.error('Ошибка при отрисовке:', err);
+          showAlert('Ошибка при загрузке данных: ' + err.message);
         }
-
-        // Заполнение формы
-        document.getElementById('edit-name').value = siteData.name;
-        document.getElementById('edit-uni').value = siteData.uni;
-        document.getElementById('edit-dept').value = siteData.dept;
-        document.getElementById('edit-group').value = siteData.group;
-        document.getElementById('edit-major').value = siteData.major;
-        document.getElementById('edit-edu').value = siteData.edu;
-        document.getElementById('edit-prof').value = siteData.prof;
-        document.getElementById('edit-achieve').value = siteData.achieve;
-        document.getElementById('edit-org-name').value = siteData.orgName;
-        document.getElementById('edit-org-desc').value = siteData.orgDesc;
-        document.getElementById('edit-pos').value = siteData.pos;
       }
 
       function showPage(targetId) {
@@ -222,6 +273,7 @@
         navLinks.forEach(l => l.classList.remove('active'));
         document.querySelector(`.nav-link[data-target="${targetId}"]`).classList.add('active');
         sidebar.classList.remove('open');
+        if (targetId === 'edit') updateStorageInfo();
       }
 
       navLinks.forEach(link => {
@@ -238,71 +290,119 @@
         }
       });
 
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        siteData.name = document.getElementById('edit-name').value;
-        siteData.uni = document.getElementById('edit-uni').value;
-        siteData.dept = document.getElementById('edit-dept').value;
-        siteData.group = document.getElementById('edit-group').value;
-        siteData.major = document.getElementById('edit-major').value;
-        siteData.edu = document.getElementById('edit-edu').value;
-        siteData.prof = document.getElementById('edit-prof').value;
-        siteData.achieve = document.getElementById('edit-achieve').value;
-        siteData.orgName = document.getElementById('edit-org-name').value;
-        siteData.orgDesc = document.getElementById('edit-org-desc').value;
-        siteData.pos = document.getElementById('edit-pos').value;
-
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Сохранение...';
+        
         try {
+          console.log('Начало сохранения данных...');
+          
+          siteData.name = document.getElementById('edit-name').value;
+          siteData.uni = document.getElementById('edit-uni').value;
+          siteData.dept = document.getElementById('edit-dept').value;
+          siteData.group = document.getElementById('edit-group').value;
+          siteData.major = document.getElementById('edit-major').value;
+          siteData.edu = document.getElementById('edit-edu').value;
+          siteData.prof = document.getElementById('edit-prof').value;
+          siteData.achieve = document.getElementById('edit-achieve').value;
+          siteData.orgName = document.getElementById('edit-org-name').value;
+          siteData.orgDesc = document.getElementById('edit-org-desc').value;
+          siteData.pos = document.getElementById('edit-pos').value;
+
+          const dataSize = JSON.stringify(siteData).length;
+          console.log('Размер данных для сохранения:', (dataSize / 1024).toFixed(2), 'KB');
+          
+          if (dataSize > 4 * 1024 * 1024) {
+            throw new Error('Превышен лимит хранилища! Удалите фото или используйте файл Ivanov.jpg в репозитории.');
+          }
+
           localStorage.setItem('siteData', JSON.stringify(siteData));
+          console.log('Данные успешно сохранены');
+          
           render();
-          successMsg.style.display = 'block';
-          setTimeout(() => successMsg.style.display = 'none', 3000);
+          showAlert('✅ Данные успешно сохранены!', 'success');
+          updateStorageInfo();
+          
         } catch (err) {
-          alert('Ошибка сохранения: превышен лимит памяти браузера. Попробуйте очистить историю или использовать фото меньшего размера.');
+          console.error('Ошибка сохранения:', err);
+          let errorMsg = 'Ошибка сохранения: ' + err.message;
+          
+          if (err.name === 'QuotaExceededError') {
+            errorMsg = '📦 Хранилище переполнено! Удалите старые данные или используйте фото меньшего размера. Откройте консоль (F12) и введите: localStorage.clear()';
+          }
+          
+          showAlert(errorMsg);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = '💾 Сохранить изменения';
         }
       });
 
-      // Оптимизированная загрузка фото
       document.getElementById('edit-photo').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        uploadStatus.textContent = ' Обработка фото...';
+        console.log('Выбран файл:', file.name, 'размер:', (file.size / 1024).toFixed(1), 'KB');
+        uploadStatus.className = 'upload-status loading';
+        uploadStatus.textContent = '⏳ Обработка фото...';
+
         const reader = new FileReader();
         
         reader.onload = function(event) {
-          const img = new Image();
-          img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const MAX_DIM = 800;
-            let width = img.width;
-            let height = img.height;
+          try {
+            const img = new Image();
+            img.onload = function() {
+              const canvas = document.createElement('canvas');
+              const MAX_DIM = 600;
+              let width = img.width;
+              let height = img.height;
 
-            if (width > height) {
-              if (width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; }
-            } else {
-              if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
-            }
+              if (width > height) {
+                if (width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; }
+              } else {
+                if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
+              }
 
-            canvas.width = width;
-            canvas.height = height;
-            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+              canvas.width = width;
+              canvas.height = height;
+              canvas.getContext('2d').drawImage(img, 0, 0, width, height);
 
-            // Сжатие JPEG
-            let quality = 0.7;
-            let dataUrl = canvas.toDataURL('image/jpeg', quality);
-            
-            // Дополнительное сжатие если всё ещё слишком тяжело
-            if (dataUrl.length > 3500000) {
-              dataUrl = canvas.toDataURL('image/jpeg', 0.5);
-            }
+              let quality = 0.6;
+              let dataUrl = canvas.toDataURL('image/jpeg', quality);
+              
+              const sizeKB = (dataUrl.length / 1024).toFixed(1);
+              console.log('Фото сжато до:', sizeKB, 'KB');
+              
+              if (parseFloat(sizeKB) > 2000) {
+                dataUrl = canvas.toDataURL('image/jpeg', 0.4);
+                const newSizeKB = (dataUrl.length / 1024).toFixed(1);
+                console.log('Дополнительное сжатие до:', newSizeKB, 'KB');
+              }
 
-            siteData.photo = dataUrl;
-            uploadStatus.textContent = `✅ Фото сжато до ${(dataUrl.length / 1024).toFixed(1)} КБ. Нажмите "Сохранить".`;
-            uploadStatus.style.color = '#27ae60';
-          };
-          img.src = event.target.result;
+              siteData.photo = dataUrl;
+              uploadStatus.className = 'upload-status success';
+              uploadStatus.textContent = `✅ Фото готово (${sizeKB} КБ). Нажмите "Сохранить" внизу страницы.`;
+              updateStorageInfo();
+            };
+            img.onerror = () => {
+              throw new Error('Не удалось загрузить изображение');
+            };
+            img.src = event.target.result;
+          } catch (err) {
+            console.error('Ошибка обработки фото:', err);
+            uploadStatus.className = 'upload-status error';
+            uploadStatus.textContent = '❌ Ошибка: ' + err.message;
+            showAlert('Ошибка обработки фото: ' + err.message);
+          }
         };
+        
+        reader.onerror = () => {
+          uploadStatus.className = 'upload-status error';
+          uploadStatus.textContent = '❌ Ошибка чтения файла';
+          showAlert('Не удалось прочитать файл');
+        };
+        
         reader.readAsDataURL(file);
       });
 
