@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Контрольная работа №1 | Иванов Д.Г.</title>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #34495e;
+      --accent: #3498db;
+      --bg: #ecf0f1;
+      --card-bg: #ffffff;
+      --text: #333333;
+      --border: #bdc3c7;
+      --shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; display: flex; min-height: 100vh; }
+    
+    /* Sidebar */
+    #sidebar { width: 260px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 20px 0; position: fixed; height: 100%; transition: transform 0.3s ease; z-index: 100; }
+    #sidebar h2 { text-align: center; margin-bottom: 25px; font-size: 1.1rem; padding: 0 10px; border-bottom: 1px solid var(--secondary); padding-bottom: 15px; }
+    .nav-link { padding: 14px 20px; color: #bdc3c7; text-decoration: none; transition: 0.2s; border-left: 4px solid transparent; font-weight: 500; }
+    .nav-link:hover, .nav-link.active { background: var(--secondary); color: #fff; border-left-color: var(--accent); }
+    #menu-toggle { display: none; position: fixed; top: 15px; left: 15px; z-index: 101; background: var(--primary); color: white; border: none; padding: 10px 14px; cursor: pointer; border-radius: 6px; font-size: 1rem; box-shadow: var(--shadow); }
+    
+    /* Main Content */
+    main { margin-left: 260px; flex: 1; padding: 30px; width: calc(100% - 260px); }
+    .page { display: none; max-width: 950px; margin: 0 auto; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .card { background: var(--card-bg); padding: 25px; border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 20px; }
+    h1 { color: var(--primary); margin-bottom: 20px; font-size: 1.8rem; border-bottom: 2px solid var(--accent); padding-bottom: 10px; display: inline-block; }
+    h3 { color: var(--secondary); margin: 20px 0 10px; }
+    
+    .photo-container { text-align: center; margin-bottom: 25px; }
+    .photo-container img { max-width: 180px; max-height: 180px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); box-shadow: var(--shadow); }
+    .no-photo { color: #7f8c8d; font-style: italic; }
+    
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .info-item strong { display: block; color: var(--secondary); margin-bottom: 4px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-item span { display: block; font-size: 1.05rem; }
+    
+    /* Form */
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--primary); }
+    .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; transition: border 0.2s; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    button[type="submit"] { background: var(--accent); color: white; border: none; padding: 14px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; width: 100%; }
+    button[type="submit"]:hover { background: #2980b9; }
+    .success-msg { color: #27ae60; margin-top: 12px; font-weight: 500; display: none; text-align: center; }
+    small { color: #7f8c8d; display: block; margin-top: 5px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #sidebar { transform: translateX(-100%); width: 240px; }
+      #sidebar.open { transform: translateX(0); }
+      #menu-toggle { display: block; }
+      main { margin-left: 0; width: 100%; padding: 20px; padding-top: 65px; }
+      .info-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <button id="menu-toggle">☰ Меню</button>
+  <nav id="sidebar">
+    <h2>Навигация</h2>
+    <a href="#about" class="nav-link active" data-target="about">Информация о себе</a>
+    <a href="#org" class="nav-link" data-target="org">Информация об организации</a>
+    <a href="#edit" class="nav-link" data-target="edit">Редактирование</a>
+  </nav>
+
+  <main>
+    <!-- Страница 1: О себе -->
+    <section id="about" class="page active">
+      <div class="card">
+        <h1>Информация о студенте</h1>
+        <div class="photo-container">
+          <img id="display-photo" src="" alt="Фото студента" style="display:none;">
+          <p id="no-photo-text" class="no-photo">Фото не загружено</p>
+        </div>
+        <div class="info-grid">
+          <div class="info-item"><strong>ФИО:</strong> <span id="disp-name"></span></div>
+          <div class="info-item"><strong>ВУЗ:</strong> <span id="disp-uni"></span></div>
+          <div class="info-item"><strong>Кафедра:</strong> <span id="disp-dept"></span></div>
+          <div class="info-item"><strong>Группа:</strong> <span id="disp-group"></span></div>
+          <div class="info-item"><strong>Направление:</strong> <span id="disp-major"></span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Интересы и достижения</h3>
+        <p><strong>Образовательные интересы:</strong> <span id="disp-edu"></span></p>
+        <p style="margin-top:10px;"><strong>Профессиональные интересы:</strong> <span id="disp-prof"></span></p>
+        <p style="margin-top:10px;"><strong>Достижения:</strong> <span id="disp-achieve"></span></p>
+      </div>
+    </section>
+
+    <!-- Страница 2: Организация -->
+    <section id="org" class="page">
+      <div class="card">
+        <h1>Информация об организации</h1>
+        <div class="info-grid">
+          <div class="info-item"><strong>Название:</strong> <span id="disp-org-name"></span></div>
+          <div class="info-item"><strong>Должность:</strong> <span id="disp-pos"></span></div>
+        </div>
+        <h3>Описание деятельности</h3>
+        <p id="disp-org-desc" style="margin-top:10px; white-space: pre-line;"></p>
+      </div>
+    </section>
+
+    <!-- Страница 3: Редактирование -->
+    <section id="edit" class="page">
+      <div class="card">
+        <h1>Редактирование данных</h1>
+        <form id="edit-form">
+          <div class="form-group">
+            <label>Фотография:</label>
+            <input type="file" id="edit-photo" accept="image/*">
+            <small>Загрузите изображение (JPG, PNG). Сохраняется в браузере.</small>
+          </div>
+          <div class="info-grid">
+            <div class="form-group"><label>ФИО:</label><input type="text" id="edit-name" required></div>
+            <div class="form-group"><label>ВУЗ:</label><input type="text" id="edit-uni" required></div>
+            <div class="form-group"><label>Кафедра:</label><input type="text" id="edit-dept" required></div>
+            <div class="form-group"><label>Группа:</label><input type="text" id="edit-group" required></div>
+            <div class="form-group"><label>Направление:</label><input type="text" id="edit-major" required></div>
+            <div class="form-group"><label>Должность:</label><input type="text" id="edit-pos"></div>
+          </div>
+          <div class="form-group"><label>Образовательные интересы:</label><textarea id="edit-edu"></textarea></div>
+          <div class="form-group"><label>Профессиональные интересы:</label><textarea id="edit-prof"></textarea></div>
+          <div class="form-group"><label>Достижения:</label><textarea id="edit-achieve"></textarea></div>
+          <div class="form-group"><label>Название организации:</label><input type="text" id="edit-org-name"></div>
+          <div class="form-group"><label>Описание организации:</label><textarea id="edit-org-desc"></textarea></div>
+          <button type="submit">💾 Сохранить изменения</button>
+          <p class="success-msg" id="success-msg">✅ Данные успешно сохранены!</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Исходные данные (согласно ТЗ)
+      const defaultData = {
+        name: "Иванов Даниил Геннадьевич",
+        uni: "Санкт-Петербургский государственный технологический институт (университет)",
+        dept: "Кафедра систем автоматизированного проектирования и управления",
+        group: "4391",
+        major: "Информатика и вычислительная техника",
+        edu: "Философия (как хобби), слежение за изменениями в сфере технического прогресса (компьютерная техника, гаджеты).",
+        prof: "Отслеживание изменений в сферах законодательства, тендеров, предпринимательства.",
+        achieve: "Участие и победы в сложных тендерных процедурах, опыт работы с объектами культурного наследия, представление организации в судебных процессах, выступление на жалобах.",
+        orgName: "Центр развития бизнеса ИНПРОФ",
+        orgDesc: "Тендерное сопровождение предпринимателей и организаций под ключ. От регистрации компаний и ИП, поиска тендерных процедур до закрытия контрактов/договоров. Охватывает государственные закупки, коммерческие процедуры, гособоронзаказ и т.д. Компания основана более 10 лет назад.",
+        pos: "Ведущий специалист тендерного отдела",
+        photo: null
+      };
+
+      // Загрузка данных из localStorage или использование дефолтных
+      let siteData = JSON.parse(localStorage.getItem('siteData')) || { ...defaultData };
+
+      // Элементы DOM
+      const pages = document.querySelectorAll('.page');
+      const navLinks = document.querySelectorAll('.nav-link');
+      const menuToggle = document.getElementById('menu-toggle');
+      const sidebar = document.getElementById('sidebar');
+      const form = document.getElementById('edit-form');
+      const successMsg = document.getElementById('success-msg');
+
+      // Функция отрисовки данных
+      function render() {
+        document.getElementById('disp-name').textContent = siteData.name;
+        document.getElementById('disp-uni').textContent = siteData.uni;
+        document.getElementById('disp-dept').textContent = siteData.dept;
+        document.getElementById('disp-group').textContent = siteData.group;
+        document.getElementById('disp-major').textContent = siteData.major;
+        document.getElementById('disp-edu').textContent = siteData.edu;
+        document.getElementById('disp-prof').textContent = siteData.prof;
+        document.getElementById('disp-achieve').textContent = siteData.achieve;
+        document.getElementById('disp-org-name').textContent = siteData.orgName;
+        document.getElementById('disp-org-desc').textContent = siteData.orgDesc;
+        document.getElementById('disp-pos').textContent = siteData.pos;
+
+        const img = document.getElementById('display-photo');
+        const noPhoto = document.getElementById('no-photo-text');
+        if (siteData.photo) {
+          img.src = siteData.photo;
+          img.style.display = 'block';
+          noPhoto.style.display = 'none';
+        } else {
+          img.style.display = 'none';
+          noPhoto.style.display = 'block';
+        }
+
+        // Заполнение формы редактирования
+        document.getElementById('edit-name').value = siteData.name;
+        document.getElementById('edit-uni').value = siteData.uni;
+        document.getElementById('edit-dept').value = siteData.dept;
+        document.getElementById('edit-group').value = siteData.group;
+        document.getElementById('edit-major').value = siteData.major;
+        document.getElementById('edit-edu').value = siteData.edu;
+        document.getElementById('edit-prof').value = siteData.prof;
+        document.getElementById('edit-achieve').value = siteData.achieve;
+        document.getElementById('edit-org-name').value = siteData.orgName;
+        document.getElementById('edit-org-desc').value = siteData.orgDesc;
+        document.getElementById('edit-pos').value = siteData.pos;
+      }
+
+      // Навигация
+      function showPage(targetId) {
+        pages.forEach(p => p.classList.remove('active'));
+        document.getElementById(targetId).classList.add('active');
+        navLinks.forEach(l => l.classList.remove('active'));
+        document.querySelector(`.nav-link[data-target="${targetId}"]`).classList.add('active');
+        sidebar.classList.remove('open');
+      }
+
+      navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          showPage(link.dataset.target);
+        });
+      });
+
+      // Мобильное меню
+      menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+      document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && !sidebar.contains(e.target) && e.target !== menuToggle) {
+          sidebar.classList.remove('open');
+        }
+      });
+
+      // Сохранение формы
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        siteData.name = document.getElementById('edit-name').value;
+        siteData.uni = document.getElementById('edit-uni').value;
+        siteData.dept = document.getElementById('edit-dept').value;
+        siteData.group = document.getElementById('edit-group').value;
+        siteData.major = document.getElementById('edit-major').value;
+        siteData.edu = document.getElementById('edit-edu').value;
+        siteData.prof = document.getElementById('edit-prof').value;
+        siteData.achieve = document.getElementById('edit-achieve').value;
+        siteData.orgName = document.getElementById('edit-org-name').value;
+        siteData.orgDesc = document.getElementById('edit-org-desc').value;
+        siteData.pos = document.getElementById('edit-pos').value;
+
+        localStorage.setItem('siteData', JSON.stringify(siteData));
+        render();
+        successMsg.style.display = 'block';
+        setTimeout(() => successMsg.style.display = 'none', 3000);
+      });
+
+      // Загрузка фото
+      document.getElementById('edit-photo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            siteData.photo = event.target.result;
+            localStorage.setItem('siteData', JSON.stringify(siteData));
+            render();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Первичная отрисовка
+      render();
+    });
+  </script>
+</body>
+</html>
