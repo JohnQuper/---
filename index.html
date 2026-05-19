@@ -42,6 +42,8 @@
     .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
     .info-item strong { display: block; color: var(--secondary); margin-bottom: 4px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
     .info-item span { display: block; font-size: 1.05rem; }
+    .info-item a { color: var(--accent); text-decoration: none; }
+    .info-item a:hover { text-decoration: underline; }
     
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--primary); }
@@ -98,6 +100,8 @@
           <div class="info-item"><strong>Кафедра:</strong> <span id="disp-dept"></span></div>
           <div class="info-item"><strong>Группа:</strong> <span id="disp-group"></span></div>
           <div class="info-item"><strong>Направление:</strong> <span id="disp-major"></span></div>
+          <div class="info-item"><strong>Телефон:</strong> <a id="disp-phone" href="tel:"></a></div>
+          <div class="info-item"><strong>Email:</strong> <a id="disp-email" href="mailto:"></a></div>
         </div>
       </div>
       <div class="card">
@@ -132,7 +136,7 @@
             <label>Фотография:</label>
             <input type="file" id="edit-photo" accept="image/*">
             <div id="upload-status" class="upload-status"></div>
-            <small>💡 Совет: загрузите файл Ivanov.jpg в репозиторий GitHub для надёжности</small>
+            <small>💡 Оставьте пустым, чтобы использовать фото из репозитория (Ivanov.jpg)</small>
           </div>
           
           <div class="info-grid">
@@ -141,6 +145,8 @@
             <div class="form-group"><label>Кафедра:</label><input type="text" id="edit-dept" required></div>
             <div class="form-group"><label>Группа:</label><input type="text" id="edit-group" required></div>
             <div class="form-group"><label>Направление:</label><input type="text" id="edit-major" required></div>
+            <div class="form-group"><label>Телефон:</label><input type="tel" id="edit-phone" placeholder="+7 (999) 525-81-03"></div>
+            <div class="form-group"><label>Email:</label><input type="email" id="edit-email" placeholder="daniilivanov00@mail.ru"></div>
             <div class="form-group"><label>Должность:</label><input type="text" id="edit-pos"></div>
           </div>
           
@@ -170,6 +176,8 @@
         dept: "Кафедра систем автоматизированного проектирования и управления",
         group: "4391",
         major: "Информатика и вычислительная техника",
+        phone: "+7 (999) 525-81-03",
+        email: "daniilivanov00@mail.ru",
         edu: "Философия (как хобби), слежение за изменениями в сфере технического прогресса (компьютерная техника, гаджеты).",
         prof: "Отслеживание изменений в сферах законодательства, тендеров, предпринимательства.",
         achieve: "Участие и победы в сложных тендерных процедурах, опыт работы с объектами культурного наследия, представление организации в судебных процессах, выступление на жалобах.",
@@ -219,6 +227,10 @@
           document.getElementById('disp-dept').textContent = siteData.dept || '';
           document.getElementById('disp-group').textContent = siteData.group || '';
           document.getElementById('disp-major').textContent = siteData.major || '';
+          document.getElementById('disp-phone').textContent = siteData.phone || 'Не указан';
+          document.getElementById('disp-phone').href = siteData.phone ? `tel:${siteData.phone.replace(/\s/g, '')}` : '#';
+          document.getElementById('disp-email').textContent = siteData.email || 'Не указан';
+          document.getElementById('disp-email').href = siteData.email ? `mailto:${siteData.email}` : '#';
           document.getElementById('disp-edu').textContent = siteData.edu || '';
           document.getElementById('disp-prof').textContent = siteData.prof || '';
           document.getElementById('disp-achieve').textContent = siteData.achieve || '';
@@ -229,15 +241,17 @@
           const img = document.getElementById('display-photo');
           const noPhoto = document.getElementById('no-photo-text');
           
+          // Если есть фото в localStorage - используем его
           if (siteData.photo) {
             console.log('Загрузка фото из localStorage, размер:', (siteData.photo.length / 1024).toFixed(1), 'KB');
             img.src = siteData.photo;
             img.style.display = 'block';
             noPhoto.style.display = 'none';
           } else {
+            // Иначе пробуем загрузить из репозитория
             img.src = 'Ivanov.jpg';
             img.onload = () => {
-              console.log('Фото Ivanov.jpg загружено успешно');
+              console.log('Фото Ivanov.jpg загружено успешно из репозитория');
               img.style.display = 'block';
               noPhoto.style.display = 'none';
             };
@@ -248,11 +262,14 @@
             };
           }
 
+          // Заполняем форму редактирования
           document.getElementById('edit-name').value = siteData.name || '';
           document.getElementById('edit-uni').value = siteData.uni || '';
           document.getElementById('edit-dept').value = siteData.dept || '';
           document.getElementById('edit-group').value = siteData.group || '';
           document.getElementById('edit-major').value = siteData.major || '';
+          document.getElementById('edit-phone').value = siteData.phone || '';
+          document.getElementById('edit-email').value = siteData.email || '';
           document.getElementById('edit-edu').value = siteData.edu || '';
           document.getElementById('edit-prof').value = siteData.prof || '';
           document.getElementById('edit-achieve').value = siteData.achieve || '';
@@ -303,6 +320,8 @@
           siteData.dept = document.getElementById('edit-dept').value;
           siteData.group = document.getElementById('edit-group').value;
           siteData.major = document.getElementById('edit-major').value;
+          siteData.phone = document.getElementById('edit-phone').value;
+          siteData.email = document.getElementById('edit-email').value;
           siteData.edu = document.getElementById('edit-edu').value;
           siteData.prof = document.getElementById('edit-prof').value;
           siteData.achieve = document.getElementById('edit-achieve').value;
