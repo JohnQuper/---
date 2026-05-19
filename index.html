@@ -52,6 +52,7 @@
     button[type="submit"] { background: var(--accent); color: white; border: none; padding: 14px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: 0.2s; width: 100%; }
     button[type="submit"]:hover { background: #2980b9; }
     .success-msg { color: #27ae60; margin-top: 12px; font-weight: 500; display: none; text-align: center; }
+    .upload-status { font-size: 0.85rem; margin-top: 5px; min-height: 1.2em; }
     small { color: #7f8c8d; display: block; margin-top: 5px; }
 
     /* Responsive */
@@ -120,7 +121,8 @@
           <div class="form-group">
             <label>Фотография:</label>
             <input type="file" id="edit-photo" accept="image/*">
-            <small>Загрузите изображение (JPG, PNG). Сохраняется в браузере.</small>
+            <p class="upload-status" id="upload-status"></p>
+            <small>Автоматически сжимается для сохранения в браузере.</small>
           </div>
           <div class="info-grid">
             <div class="form-group"><label>ФИО:</label><input type="text" id="edit-name" required></div>
@@ -144,7 +146,6 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Исходные данные (согласно ТЗ)
       const defaultData = {
         name: "Иванов Даниил Геннадьевич",
         uni: "Санкт-Петербургский государственный технологический институт (университет)",
@@ -160,18 +161,16 @@
         photo: null
       };
 
-      // Загрузка данных из localStorage или использование дефолтных
       let siteData = JSON.parse(localStorage.getItem('siteData')) || { ...defaultData };
 
-      // Элементы DOM
       const pages = document.querySelectorAll('.page');
       const navLinks = document.querySelectorAll('.nav-link');
       const menuToggle = document.getElementById('menu-toggle');
       const sidebar = document.getElementById('sidebar');
       const form = document.getElementById('edit-form');
       const successMsg = document.getElementById('success-msg');
+      const uploadStatus = document.getElementById('upload-status');
 
-      // Функция отрисовки данных
       function render() {
         document.getElementById('disp-name').textContent = siteData.name;
         document.getElementById('disp-uni').textContent = siteData.uni;
@@ -187,16 +186,23 @@
 
         const img = document.getElementById('display-photo');
         const noPhoto = document.getElementById('no-photo-text');
+        
         if (siteData.photo) {
           img.src = siteData.photo;
           img.style.display = 'block';
           noPhoto.style.display = 'none';
         } else {
-          img.style.display = 'none';
-          noPhoto.style.display = 'block';
+          // Фоллбэк на файл из репозитория
+          img.src = 'Ivanov.jpg';
+          img.style.display = 'block';
+          noPhoto.style.display = 'none';
+          img.onerror = () => {
+            img.style.display = 'none';
+            noPhoto.style.display = 'block';
+          };
         }
 
-        // Заполнение формы редактирования
+        // Заполнение формы
         document.getElementById('edit-name').value = siteData.name;
         document.getElementById('edit-uni').value = siteData.uni;
         document.getElementById('edit-dept').value = siteData.dept;
@@ -210,7 +216,6 @@
         document.getElementById('edit-pos').value = siteData.pos;
       }
 
-      // Навигация
       function showPage(targetId) {
         pages.forEach(p => p.classList.remove('active'));
         document.getElementById(targetId).classList.add('active');
@@ -226,7 +231,6 @@
         });
       });
 
-      // Мобильное меню
       menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
       document.addEventListener('click', (e) => {
         if (window.innerWidth <= 768 && !sidebar.contains(e.target) && e.target !== menuToggle) {
@@ -234,7 +238,6 @@
         }
       });
 
-      // Сохранение формы
       form.addEventListener('submit', (e) => {
         e.preventDefault();
         siteData.name = document.getElementById('edit-name').value;
@@ -249,27 +252,60 @@
         siteData.orgDesc = document.getElementById('edit-org-desc').value;
         siteData.pos = document.getElementById('edit-pos').value;
 
-        localStorage.setItem('siteData', JSON.stringify(siteData));
-        render();
-        successMsg.style.display = 'block';
-        setTimeout(() => successMsg.style.display = 'none', 3000);
-      });
-
-      // Загрузка фото
-      document.getElementById('edit-photo').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(event) {
-            siteData.photo = event.target.result;
-            localStorage.setItem('siteData', JSON.stringify(siteData));
-            render();
-          };
-          reader.readAsDataURL(file);
+        try {
+          localStorage.setItem('siteData', JSON.stringify(siteData));
+          render();
+          successMsg.style.display = 'block';
+          setTimeout(() => successMsg.style.display = 'none', 3000);
+        } catch (err) {
+          alert('Ошибка сохранения: превышен лимит памяти браузера. Попробуйте очистить историю или использовать фото меньшего размера.');
         }
       });
 
-      // Первичная отрисовка
+      // Оптимизированная загрузка фото
+      document.getElementById('edit-photo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        uploadStatus.textContent = ' Обработка фото...';
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_DIM = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; }
+            } else {
+              if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+            // Сжатие JPEG
+            let quality = 0.7;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            
+            // Дополнительное сжатие если всё ещё слишком тяжело
+            if (dataUrl.length > 3500000) {
+              dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+            }
+
+            siteData.photo = dataUrl;
+            uploadStatus.textContent = `✅ Фото сжато до ${(dataUrl.length / 1024).toFixed(1)} КБ. Нажмите "Сохранить".`;
+            uploadStatus.style.color = '#27ae60';
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
       render();
     });
   </script>
